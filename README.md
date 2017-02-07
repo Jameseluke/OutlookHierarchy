@@ -1,5 +1,5 @@
-# OutlookHierarchy
-Powershell script to pull full hierarchy information from Outlook from a list of names for import into Visio.
+# Outlook Hierarchy For Visio Import
+Powershell script to pull full hierarchy information from Outlook for a given list of names for import into Visio.
 Connects Employees to Manager based on alias (contains employeeID)
 User will be queried on whether each name inputted matches the employee found 
 
