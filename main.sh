@@ -2,7 +2,9 @@ function getEmployeesByName{
   # $query contains the names of the employees to search for in format "LastName, FirstName"
   $queries = $args[0]
   # if $correct is true, will not check if query and result match
-  $correct = $args[1]
+  $correct = $args[2]
+  $logfile = $args[1]
+  $failure = ""
   $temp = New-Object System.Collections.ArrayList
   $outlook = New-Object -ComObject Outlook.Application
   foreach($query in $queries){
@@ -16,6 +18,10 @@ function getEmployeesByName{
     else {
       $temp.Add($emp) | Out-Null
     }
+  }
+  if($failure){
+    $errorString = "Names without matches:`r`n" + $failure
+    $errorString | Out-File -encoding ASCII $logfile
   }
   return $temp
 }
@@ -36,11 +42,11 @@ function main{
   param(
         [switch] $correct)
   $queries = Get-Content $args[0]
-  $unproccessedEmp = getEmployeesByName $queries $correct
+  $log = [System.IO.Path]::GetTempFileName()
+  $unproccessedEmp = getEmployeesByName $queries $log $correct
   $success = "Name, UID, Department, Role, Manager`r`n"
-  $failure = "Names without matches:`r`n"
   $employees = @{}
-  cls
+  Clear-Host
   Write-Progress -Activity "Working..."
   foreach($emp in $unproccessedEmp){
     $full = $emp.getExchangeUser()
@@ -62,6 +68,9 @@ function main{
     $success += $employees.$h.Role  + ","
     $success += $employees.$h.Manager + "`n"
   }
-  $success | Out-File -encoding ASCII $args[1]
-  echo "Finished, Output saved to $args[1]"
+  $out = $args[1]
+  $success | Out-File -encoding ASCII $out
+  Write-Host "Finished, Output saved to $out"
+  Get-Content $log | Write-Host
+  Get-Item $log | Remove-Item
 }
