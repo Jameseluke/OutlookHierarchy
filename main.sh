@@ -2,20 +2,30 @@ function getEmployeesByName{
   # $query contains the names of the employees to search for in format "LastName, FirstName"
   $queries = $args[0]
   # if $correct is true, will not check if query and result match
-  $correct = $args[2]
+  $correctflag = $args[2]
   $logfile = $args[1]
   $failure = ""
   $temp = New-Object System.Collections.ArrayList
   $outlook = New-Object -ComObject Outlook.Application
   foreach($query in $queries){
-    $emp = $outlook.Session.GetGlobalAddressList().AddressEntries.Item($query)
-    if(!$correct){
+    $correct = $correctflag
+    if ($correct){
+      $emp = $outlook.Session.GetGlobalAddressList().AddressEntries.Item($query)
+    }
+    while(!$correct){
+      $emp = $outlook.Session.GetGlobalAddressList().AddressEntries.Item($query)
       $match = checkMatch $query $emp.Name
+      if($match -eq -1){
+        $nomatch = $query
+        $query = Read-Host "Enter a new name to search for (Leave blank to skip)"
+        if (!$query){
+          $failure += " $nomatch`r`n"
+          break
+        }
+      }
+      $correct = if ($match -eq -1) {$FALSE} else {$TRUE}
     }
-    if(!$correct -and ($match -eq -1)){
-      $failure += " $query`r`n"
-    }
-    else {
+    if ($correct){
       $temp.Add($emp) | Out-Null
     }
   }
